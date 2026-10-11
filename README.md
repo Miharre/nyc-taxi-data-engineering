@@ -1,5 +1,7 @@
 # NYC Taxi Data Engineering Platform
 
+[![CI](https://github.com/Miharre/nyc-taxi-data-engineering/actions/workflows/ci.yml/badge.svg)](https://github.com/Miharre/nyc-taxi-data-engineering/actions/workflows/ci.yml)
+
 An end-to-end batch data pipeline that turns monthly NYC TLC Yellow Taxi files into a repeatable, auditable PostgreSQL warehouse with data-quality controls and BI-ready analytics views.
 
 I built this project around a practical data-engineering question: **how do I make an imperfect external dataset dependable enough for downstream analytics?** The design favors clear engineering decisions over adding tools for their own sake. The full demonstration runs locally with Docker.
@@ -45,14 +47,14 @@ The repository was validated end to end with the Dockerized PostgreSQL environme
 | Accepted rows per run | 94,728 |
 | Quarantined rows per run | 5,272 |
 | Acceptance rate | 94.73% |
-| Curated fact rows after two identical runs | 94,728 |
+| Curated fact rows after three identical runs | 94,728 |
 | Unique `trip_id` values | 94,728 |
 | Duplicate fact rows | 0 |
 | Location dimension rows | 265 |
-| Automated tests in validated run | 7/7 passed |
+| Automated tests in validated run | 10/10 passed |
 | Analytics views | 3 |
 
-Two executions of the same input produced separate quarantine batches of 5,272 rows, each traceable by `pipeline_run_id`, while the curated fact table remained at 94,728 unique trips. This demonstrates the intended split between **auditable run history** and **idempotent analytical facts**.
+Three executions of the same input produced separate quarantine batches of 5,272 rows, each traceable by `pipeline_run_id`, while the curated fact table remained at 94,728 unique trips. This demonstrates the intended split between **auditable run history** and **idempotent analytical facts**.
 
 The warehouse quality check also returned zero rows with nonpositive trip distance, nonpositive trip duration, or negative total amount.
 
@@ -89,7 +91,7 @@ Python 3.11 | Pandas | PyArrow | SQLAlchemy | PostgreSQL 16 | SQL | Docker | Pyt
 Prerequisites: Docker Desktop and Git.
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/Miharre/nyc-taxi-data-engineering.git
 cd nyc-taxi-data-engineering
 docker compose up -d --build
 docker compose logs pipeline
@@ -118,7 +120,7 @@ docker compose run --rm pipeline python -m src.pipeline --year 2026 --month 1
 ## Useful validation queries
 
 ```sql
-SELECT run_id, run_month, source_rows, accepted_rows, rejected_rows,
+SELECT run_id, source_rows, accepted_rows, rejected_rows,
        status, started_at, finished_at
 FROM meta.pipeline_runs
 ORDER BY started_at DESC;
